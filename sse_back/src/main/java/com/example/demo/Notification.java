@@ -5,9 +5,9 @@ import lombok.Data;
 
 @Builder
 public class Notification {
-    private Member receiver;
-    private Review review;
-    private String content;
-    private String url;
-    private boolean isRead;
+    String memberId;
+    String calendarId;
+    String scheduleId;
+    String date;
+    int type;
 }
