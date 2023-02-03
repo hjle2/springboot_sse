@@ -8,6 +8,10 @@
     <title><%= htmlWebpackPlugin.options.title %></title>
   </head>
   <body>
+    <input type="text" id="id"/>
+    <input type="text" id="pwd"/>
+    <button type="button" onclick="login()">로그인</button>
+    <button type="button" onclick="count()">count</button>
     <noscript>
       <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
     </noscript>
@@ -15,3 +19,68 @@
     <!-- built files will be auto injected -->
   </body>
 </html>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script type="text/javaScript">
+    function login() {
+        const id = document.getElementById('id').value;
+        const pwd = document.getElementById('pwd').value;
+
+        const eventSource = new EventSource(`http://localhost:8080/signin/${id}`);
+
+        eventSource.addEventListener("sse", function (event) {
+            console.log(event.data);
+        
+            const data = JSON.parse(event.data);
+
+            (async () => {
+                // 브라우저 알림
+                const showNotification = () => {
+                    console.log("noti");
+                    const notification = new Notification('코드 봐줘', {
+                        body: data.content
+                    });
+
+                    console.log(notification);
+                    
+                    setTimeout(() => {
+                        notification.close();
+                    }, 10 * 1000);
+                    
+                    notification.addEventListener('click', () => {
+                        console.log("click");
+                        window.open(data.url, '_blank');
+                    });
+                }
+
+                // 브라우저 알림 허용 권한
+                let granted = false;
+
+                if (Notification.permission === 'granted') {
+                    granted = true;
+                } else if (Notification.permission !== 'denied') {
+                    let permission = await Notification.requestPermission();
+                    granted = permission === 'granted';
+                }
+
+                // 알림 보여주기
+                if (granted) {
+                    showNotification();
+                }
+            })();
+        })
+
+        eventSource.addEventListener("count", e => {
+            const {data: receivedCount} = e;
+            console.log("count event data", receivedCount);
+        })
+    }
+    function count() {
+        const id = document.getElementById('id').value;
+        // const pwd = document.getElementById('pwd').value;
+
+        axios.get(`http://localhost:8080/get`, {id})
+        .then((e) => console.log(e))
+        .catch((err) => console.log(err));
+
+    }
+</script>
